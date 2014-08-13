@@ -42,20 +42,25 @@ class artifactory(
     mode    => '0644',
   }
 
-  wget::fetch{ "download-$version-artifactory":
-    source      => "http://sourceforge.net/projects/artifactory/files/artifactory/3.3.0/artifactory-$version.zip/download",
-    destination => "/tmp/artifactory.zip",
-    execuser    => $user,
-    require     => File["$path/default"]
-  }->
   file{ "$path/home":
     owner  => $user,
     group  => $group,
     ensure => directory
-  }->
+  }
+
+  wget::fetch{ "download-$version-artifactory":
+    source      => "http://sourceforge.net/projects/artifactory/files/artifactory/$version/artifactory-$version.zip/download",
+    destination => "/tmp/artifactory-$version.zip",
+    execuser    => $user,
+    notify      => Exec["unzip-artifactory-$version"]
+  }
+
   exec{ "unzip-artifactory-$version":
-    command     => "rm -rf /tmp/artifactory-$version && unzip /tmp/artifactory.zip -d /tmp/ && cp -r /tmp/artifactory-$version/* $path/home",
+    command     => "rm -rf /tmp/artifactory-$version && unzip /tmp/artifactory-$version.zip -d /tmp/ && cp -r /tmp/artifactory-$version/* $path/home",
     user        => $user,
+    creates     => "$path/home/bin",
+    require     => File["$path/home"],
+    notify      => Service['artifactory']
   }->
   file{ "$path/home/tomcat/logs":
     owner   => $user,
@@ -68,7 +73,6 @@ class artifactory(
     group       => $group,
     ensure      => present,
     require     => Exec["unzip-artifactory-$version"],
-    notify      => Service['artifactory']
   }
 
 #$user must be able to restart service
@@ -93,6 +97,8 @@ class artifactory(
     enable    => 'true',
     hasstatus => false,
     require   => [File[$pidfile],
-      File['/etc/init.d/artifactory']]
+      File['/etc/init.d/artifactory'],
+      File["$path/default"],
+      File["$path/home/tomcat/logs/catalina.out"]]
   }
 }
