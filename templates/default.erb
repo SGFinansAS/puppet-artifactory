@@ -1,0 +1,10 @@
+#!/bin/sh
+
+#Default values
+export ARTIFACTORY_HOME=<%= @path %>/home
+export ARTIFACTORY_USER=<%= @user %>
+
+export TOMCAT_HOME=<%= @path %>/home/tomcat
+export ARTIFACTORY_PID=<%= @pidfile %>
+
+export JAVA_OPTIONS="-server -Xms512m -Xmx2g -Xss256k -XX:PermSize=128m -XX:MaxPermSize=256m -XX:+UseG1GC"
