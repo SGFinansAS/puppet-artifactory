@@ -10,7 +10,7 @@
 #    Valid values are stopped (also called false), running (also called true).
 #    Default is running
 # [pidfile]
-#    If you'd like to change this one. Default is /var/run/artifactory/artifactory.pid
+#    If you'd like to change this one. Default is /var/run/artifactory.pid
 # [version]
 #    Version of Artifactory. Default 3.3.0
 class artifactory(
@@ -29,13 +29,6 @@ class artifactory(
     content => template('artifactory/default.erb'),
   }
 
-# Pidfile
-  file{ '/var/run/artifactory':
-    ensure  => directory,
-    owner   => $user,
-    group   => $group,
-    mode    => '0644'
-  }->
   file { $pidfile:
     owner   => $user,
     group   => $group,
