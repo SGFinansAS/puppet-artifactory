@@ -42,12 +42,14 @@ class artifactory(
     mode    => '0644',
   }
 
+# We create a home path where we unzip the content of artifactory.zip
   file{ "$path/home":
     owner  => $user,
     group  => $group,
     ensure => directory
   }
 
+# Download the artifactory zip to /tmp, notify unzip
   wget::fetch{ "download-$version-artifactory":
     source      => "http://sourceforge.net/projects/artifactory/files/artifactory/$version/artifactory-$version.zip/download",
     destination => "/tmp/artifactory-$version.zip",
@@ -55,6 +57,8 @@ class artifactory(
     notify      => Exec["unzip-artifactory-$version"]
   }
 
+# Unzip the stuff that artifactory is made of.
+# Create some folders that must be present
   exec{ "unzip-artifactory-$version":
     command     => "rm -rf /tmp/artifactory-$version && unzip /tmp/artifactory-$version.zip -d /tmp/ && cp -r /tmp/artifactory-$version/* $path/home",
     user        => $user,
@@ -84,6 +88,7 @@ class artifactory(
     content => "$user ALL= NOPASSWD: /sbin/service artifactory *\n",
   }
 
+# Create a init file. sudo service start|stop|check and so on.
   file { '/etc/init.d/artifactory':
     owner   => root,
     group   => root,
@@ -92,6 +97,7 @@ class artifactory(
     notify  => Service[artifactory], # Restarts Artifactory when init-script changes
   }
 
+# The actual service. Go crazy.
   service{ 'artifactory':
     ensure    => $ensure,
     enable    => 'true',
